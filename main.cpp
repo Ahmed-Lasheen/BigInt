@@ -181,6 +181,8 @@ BigInt operator%(BigInt lhs, const BigInt& rhs) { //hafez
 // Equality comparison operator (x == y)
 bool operator==(const BigInt& lhs, const BigInt& rhs) { //lasheen
     // TODO: Implement this operator
+    if(lhs.isNegative==rhs.isNegative)&&(lhs.number==rhs.number)
+        return true;
     return false;
 }
 
@@ -211,6 +213,7 @@ bool operator>(const BigInt& lhs, const BigInt& rhs) { //menna
 // Greater-than-or-equal comparison operator (x >= y)
 bool operator>=(const BigInt& lhs, const BigInt& rhs) { //lasheen
     // TODO: Implement this operator
+    if(!(lhs<rhs)||(lhs==rhs))
     return false;
 }
 
