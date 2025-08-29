@@ -9,6 +9,11 @@ class BigInt {
     // Remove unnecessary leading zeros from the number string
     void removeLeadingZeros() { 
         // TODO: Implement this function
+        while(number.length()>=1&&number[0]=='0')
+        {
+            number.erase(0,1);
+        }
+
     }
 
     // Compare absolute values of two BigInts (ignore signs)
@@ -60,7 +65,7 @@ public:
     // Unary plus operator (+x)
     BigInt operator+() const {  //ahmed
         BigInt result;
-        // TODO: Implement this operator
+        result=*this;
         return result;
     }
 
@@ -117,6 +122,8 @@ public:
     BigInt operator--(int) { //lasheen
         BigInt temp;
         // TODO: Implement this operator
+        temp=*this;
+        --(*this);
         return temp;
     }
 
