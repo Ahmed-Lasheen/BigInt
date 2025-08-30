@@ -8,9 +8,12 @@ class BigInt
     bool isNegative; // True if number is negative
 
     // Remove unnecessary leading zeros from the number string
-    void removeLeadingZeros()
+    void removeLeadingZeros(string &s)
     {
-        // TODO: Implement this function
+        while (number.length() > 1 && number[0] == '0')
+        {
+            number.erase(0, 1);
+        }
     }
 
     // Compare absolute values of two BigInts (ignore signs)
@@ -98,6 +101,12 @@ public:
         int o = other.number.size();
 
         string y = string(n - o, '0') + other.number; // y will represent the other string and if n>m the gap will be completed with zeros
+        if (number < y)
+        {
+            swap(number, y);
+            isNegative = !isNegative; // to handle the sign after swapping to subtract always smaller from larger
+        }
+
         for (int i = n - 1; i >= 0; i--)
         {
             int numx = number[i] - '0';
@@ -105,14 +114,17 @@ public:
             if (numx < numy)
             {
                 numx += 10;
-                number[i - 1] = (number[i - 1] - '0' - 1) + '0'; // take the borrow from the preceding digit and change its value then return it to char again
+                if (i > 0)
+                {                                                    // avoid out-of-bounds
+                    number[i - 1] = (number[i - 1] - '0' - 1) + '0'; // take the borrow from the preceding digit and change its value then return it to char again
+                }
             }
             int resultsubtract = numx - numy;
             number[i] = resultsubtract + '0';
         }
 
-        removeLeadingZeros(); // remove the leading zeros from final number
-        return *this;         // refers to the current number we have
+        removeLeadingZeros(number); // remove the leading zeros from final number
+        return *this;               // refers to the current number we have
     }
 
     // Multiplication assignment operator (x *= y)
@@ -195,7 +207,7 @@ public:
         {
             if (num.isNegative && num.number != "0")
             {
-                os << '-';
+                os << '-'; // after searching i found out that ostream is similar to stack push or queue as well
             }
             os << num.number;
             return os;
@@ -213,13 +225,44 @@ public:
     // Friend declarations for comparison operators
     friend bool operator==(const BigInt &lhs, const BigInt &rhs); // menna
     friend bool operator<(const BigInt &lhs, const BigInt &rhs);  // lasheen
+    friend BigInt operator+(BigInt lhs, const BigInt &rhs);       // fares
+    friend bool operator<=(const BigInt &lhs, const BigInt &rhs); // fares
 };
+void removeLeadingZeros(string &s)
+{
+    while (s.length() > 1 && s[0] == '0')
+    {
+        s.erase(0, 1);
+    }
+}
 
 // Binary addition operator (x + y)
 BigInt operator+(BigInt lhs, const BigInt &rhs)
 { // fares
     BigInt result;
+    string x = lhs.number;
+    string y = rhs.number;
+    int n = x.size();
+    int m = y.size();
 
+    if (n < m)
+        x = string(m - n, '0') + x;
+    if (m < n)
+        y = string(n - m, '0') + y;
+    int len = max(n, m);
+    string sum(len + 1, '0'); // +1 for possible carry like 1+999=1000
+    int carry = 0;
+    for (int i = len - 1; i >= 0; --i)
+    {
+        int digitSum = (x[i] - '0') + (y[i] - '0') + carry;
+        sum[i + 1] = (digitSum % 10) + '0';
+        carry = digitSum / 10;
+    }
+    sum[0] = carry + '0';
+    // Remove leading zero if not needed
+    if (sum[0] == '0')
+        sum.erase(0, 1);
+    result.number = sum;
     return result;
 }
 
@@ -279,8 +322,33 @@ bool operator<(const BigInt &lhs, const BigInt &rhs)
 // Less-than-or-equal comparison operator (x <= y)
 bool operator<=(const BigInt &lhs, const BigInt &rhs)
 { // fares
-    // TODO: Implement this operator
-    return false;
+    string x = lhs.number;
+    string y = rhs.number;
+    removeLeadingZeros(x);
+    removeLeadingZeros(y);
+    int n = x.size();
+    int m = y.size();
+    // both of differentt signs
+    if (lhs.isNegative && !rhs.isNegative)
+        return true;
+    if (!lhs.isNegative && rhs.isNegative)
+        return false;
+    // Both same sign
+    if (n < m)
+        return lhs.isNegative ? false : true;
+    if (n > m)
+        return lhs.isNegative ? true : false;
+    // n == m
+    for (int i = 0; i < n; i++)
+    {
+        if (x[i] < y[i])
+            return lhs.isNegative ? false : true;
+        if (x[i] > y[i])
+            return lhs.isNegative ? true : false;
+    }
+    // exiting loop means all digits are equal so return true
+
+    return true;
 }
 
 // Greater-than comparison operator (x > y)
