@@ -116,6 +116,7 @@ public:
     // Modulus assignment operator (x %= y)
     BigInt& operator%=(const BigInt& other) { //lasheen
         // TODO: Implement this operator
+        *this=*this%other;
         return *this;
     }
 
@@ -195,6 +196,45 @@ BigInt operator*(BigInt lhs, const BigInt& rhs) { //menna
 BigInt operator/(BigInt lhs, const BigInt& rhs) { //lasheen
     BigInt result;
     // TODO: Implement this operator
+    if(rhs.number=="0")
+    {
+        cout<<"can't divide by zero"<<endl;
+        return BigInt(0);
+    }
+    bool negativeResult=rhs.isNegative ^ lhs.isNegative ;
+    BigInt numerator=lhs.number;
+    BigInt denominator=rhs.number;
+
+    if(a<b) return BigInt(0);
+    if(a==b)
+    {
+        if(negativeResult)
+            return BigInt("-1");
+        else
+            return BigInt("1");
+    }
+
+    BigInt longDivision("0");
+
+    for (char step : numerator.number) {
+        // Bring down next digit
+        longDivision = longDivision * 10 + BigInt(string(1, step));
+
+        // Find how many times divisor fits
+        int count = 0;
+        while (longDivision >= denominator) {
+            longDivision = longDivision - denominator;
+            count++;
+        }
+
+        // Append count to result
+        result.number.push_back('0' + count);
+    }
+
+    // Remove leading zeros
+    result.trimLeadingZeros();
+    result.isNegative = resultNegative && result.number != "0";
+
     return result;
 }
 
