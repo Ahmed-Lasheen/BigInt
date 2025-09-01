@@ -24,7 +24,7 @@ class BigInt
         if (number.length() < other.number.length()) return -1;
         if (number > other.number) return 1;
         if (number < other.number) return -1;
-        
+
         return 0;
     }
     string digits; // string used to convert int64_t value to string
@@ -45,8 +45,31 @@ public:
     // Constructor from string representation
     BigInt(const string &str)
     { // abdelrahman
-      // TODO: Implement this constructor
+    // empty?
+    if (str.empty()) {
+        number = "0";
+        isNegative = false;
+        return;
     }
+
+    //negative?
+    size_t start = 0;
+    if (str[0] == '-') {
+        isNegative = true;
+        start = 1;
+    }
+    else if (str[0] == '+') {
+        isNegative = false;
+        start = 1;
+    }
+    else
+        isNegative = false;
+
+    number = str.substr(start);
+    removeLeadingZeros(number);
+    if (number == "0")
+        isNegative = false;
+}
 
     // Copy constructor
     BigInt(const BigInt &other)
@@ -136,14 +159,51 @@ public:
     // Multiplication assignment operator (x *= y)
     BigInt &operator*=(const BigInt &other)
     { // abdelrahman
-        // TODO: Implement this operator
+        if (number == "0" || other.number == "0") {
+        number = "0";
+        isNegative = false;
         return *this;
     }
+
+    string num1 = number;
+    string num2 = other.number;
+    int n = num1.size();
+    int m = num2.size();
+    bool resultNegative = (isNegative != other.isNegative);
+    vector<int> result(n + m, 0);
+
+    // multiply num1 with num2
+    for (int i = n - 1; i >= 0; i--) {
+        for (int j = m - 1; j >= 0; j--) {
+            int digit1 = num1[i] - '0';
+            int digit2 = num2[j] - '0';
+            int product = digit1 * digit2;
+            int sum = product + result[i + j + 1];
+            result[i + j + 1] = sum % 10;
+            result[i + j] += sum / 10;
+        }
+    }
+
+    string strResult;
+    for (int digit : result) {
+        if (!(strResult.empty() && digit == 0)) {
+            strResult += to_string(digit);
+        }
+    }
+    if (strResult.empty()) {
+        strResult = "0";
+        resultNegative = false;
+    }
+
+    number = strResult;
+    isNegative = resultNegative;
+    return *this;
+}
 
     // Division assignment operator (x /= y)
     BigInt &operator/=(const BigInt &other)
     { // menna
-        
+
 
     if (other.number == "0")
     {
@@ -197,8 +257,8 @@ public:
 
     return *this;
 }
-    
-    
+
+
 
     // Modulus assignment operator (x %= y)
     BigInt &operator%=(const BigInt &other)
@@ -232,15 +292,15 @@ public:
     // Post-increment operator (x++)
     BigInt operator++(int)
     { // abdelrahman
-        BigInt temp;
-        // TODO: Implement this operator
+        BigInt temp = *this;
+        ++(*this);
         return temp;
     }
 
     // Pre-decrement operator (--x)
     BigInt &operator--()
     { // menna
-        
+
 
     if (number == "0")
     {
@@ -297,7 +357,15 @@ public:
     // Input stream operator (for reading from input)
     friend istream &operator>>(istream &is, BigInt &num)
     { // abdelrahman
-        // TODO: Implement this operator
+        string input;
+        is >> input;
+
+        try {
+            num = BigInt(input);
+        } catch (const invalid_argument& e) {
+            is.setstate(ios::failbit);
+        }
+
         return is;
     }
 
@@ -348,8 +416,63 @@ BigInt operator+(BigInt lhs, const BigInt &rhs)
 // Binary subtraction operator (x - y)
 BigInt operator-(BigInt lhs, const BigInt &rhs)
 { // abdelrahman
+    // different signs then convert to addition
+    if (lhs.isNegative != rhs.isNegative) {
+        BigInt absRhs = rhs;
+        absRhs.isNegative = !absRhs.isNegative;
+        return lhs + absRhs;
+    }
+
+    // compare magnitudes of same sign
+    int comp = lhs.compareMagnitude(rhs);
+    if (comp == 0) {
+
+        return BigInt(0);
+    }
+
     BigInt result;
-    // TODO: Implement this operator
+    string num1, num2;
+    bool resultNegative;
+
+    if (comp > 0) {// lhs > rhs
+        num1 = lhs.number;
+        num2 = rhs.number;
+        resultNegative = lhs.isNegative;
+    }
+    else {// lhs < rhs
+        num1 = rhs.number;
+        num2 = lhs.number;
+        resultNegative = !lhs.isNegative;
+    }
+
+    // pad small number with zeros
+    if (num1.length() < num2.length()) {
+        num1 = string(num2.length() - num1.length(), '0') + num1;
+    }
+    else if (num2.length() < num1.length()) {
+        num2 = string(num1.length() - num2.length(), '0') + num2;
+    }
+
+    string difference;
+    int borrow = 0;
+    for (int i = num1.length() - 1; i >= 0; i--) { // subtraction
+        int digit1 = num1[i] - '0' - borrow;
+        int digit2 = num2[i] - '0';
+
+        if (digit1 < digit2) {
+            digit1 += 10;
+            borrow = 1;
+        }
+        else
+            borrow = 0;
+
+        int diff = digit1 - digit2;
+        difference = to_string(diff) + difference;
+    }
+
+    removeLeadingZeros(difference);
+    result.number = difference;
+    result.isNegative = resultNegative;
     return result;
 }
 
@@ -359,7 +482,7 @@ BigInt operator*(BigInt lhs, const BigInt &rhs)
     BigInt result;
 
 }
-    
+
 
 
 // Binary division operator (x / y)
@@ -395,8 +518,20 @@ bool operator!=(const BigInt &lhs, const BigInt &rhs)
 // Less-than comparison operator (x < y)
 bool operator<(const BigInt &lhs, const BigInt &rhs)
 { // abdelrahman
-    // TODO: Implement this operator
-    return false;
+    // different sign
+    if (lhs.isNegative && !rhs.isNegative) return true;
+    if (!lhs.isNegative && rhs.isNegative) return false;
+
+    //compare magnitudes of same sign
+    int comp = lhs.compareMagnitude(rhs);
+    // both negative
+    if (lhs.isNegative) {
+        return comp > 0;
+    }
+    // both positive
+    else {
+        return comp < 0;
+    }    return false;
 }
 
 // Less-than-or-equal comparison operator (x <= y)
@@ -437,7 +572,7 @@ bool operator<=(const BigInt &lhs, const BigInt &rhs)
 
     friend bool operator>(const BigInt &lhs, const BigInt &rhs)
 //menna
-      
+
     {
         if (lhs.isNegative != rhs.isNegative)
             return rhs.isNegative;
