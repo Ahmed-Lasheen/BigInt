@@ -20,7 +20,11 @@ class BigInt
     // Returns: 1 if |this| > |other|, 0 if equal, -1 if |this| < |other|
     int compareMagnitude(const BigInt &other) const
     {
-        // TODO: Implement this function
+        if (number.length() > other.number.length()) return 1;
+        if (number.length() < other.number.length()) return -1;
+        if (number > other.number) return 1;
+        if (number < other.number) return -1;
+        
         return 0;
     }
     string digits; // string used to convert int64_t value to string
@@ -47,7 +51,9 @@ public:
     // Copy constructor
     BigInt(const BigInt &other)
     { // menna
-      // TODO: Implement this constructor //string //sign
+      this->number = other.number;
+      this->isNegative = other.isNegative;
+
     }
 
     // Destructor
@@ -137,9 +143,62 @@ public:
     // Division assignment operator (x /= y)
     BigInt &operator/=(const BigInt &other)
     { // menna
-        // TODO: Implement this operator
-        return *this;
+        
+
+    if (other.number == "0")
+    {
+        throw runtime_error("Division by zero");
     }
+
+    // Determine the sign of the result
+    bool resultNegative = (this->isNegative != other.isNegative);
+
+    string dividend = this->number;
+    string divisor = other.number;
+
+    // Final result string
+    string result = "";
+
+    // Temporary remainder while dividing
+    string current = "";
+
+    for (size_t i = 0; i < dividend.size(); i++)
+    {
+        // Bring down the next digit
+        current += dividend[i];
+
+        // Remove leading zeros from the current value
+        while (current.size() > 1 && current[0] == '0')
+            current.erase(0, 1);
+
+        int count = 0;
+
+        // Subtract divisor from current until current < divisor
+        BigInt cur(current);
+        while (cur.compareMagnitude(other) >= 0)
+        {
+            cur = cur - other; // Requires operator- to be implemented
+            count++;
+        }
+
+        // Update the remainder
+        current = cur.number;
+
+        // Append the digit to the result
+        result += char('0' + count);
+    }
+
+    // Remove leading zeros from the result
+    while (result.size() > 1 && result[0] == '0')
+        result.erase(0, 1);
+
+    this->number = result;
+    this->isNegative = (result != "0") && resultNegative;
+
+    return *this;
+}
+    
+    
 
     // Modulus assignment operator (x %= y)
     BigInt &operator%=(const BigInt &other)
@@ -181,7 +240,27 @@ public:
     // Pre-decrement operator (--x)
     BigInt &operator--()
     { // menna
-        // TODO: Implement this operator
+        
+
+    if (number == "0")
+    {
+        number = "1";
+        isNegative = true;
+        return *this;
+    }
+
+    if (!isNegative)
+    {
+        BigInt one("1");
+        *this = *this - one;
+    }
+    else
+    {
+        BigInt one("1");
+        *this = *this + one;
+    }
+
+
         return *this;
     }
 
@@ -278,9 +357,10 @@ BigInt operator-(BigInt lhs, const BigInt &rhs)
 BigInt operator*(BigInt lhs, const BigInt &rhs)
 { // menna
     BigInt result;
-    // TODO: Implement this operator
-    return result;
+
 }
+    
+
 
 // Binary division operator (x / y)
 BigInt operator/(BigInt lhs, const BigInt &rhs)
@@ -351,12 +431,24 @@ bool operator<=(const BigInt &lhs, const BigInt &rhs)
     return true;
 }
 
+
+
 // Greater-than comparison operator (x > y)
-bool operator>(const BigInt &lhs, const BigInt &rhs)
-{ // menna
-    // TODO: Implement this operator
-    return false;
-}
+
+    friend bool operator>(const BigInt &lhs, const BigInt &rhs)
+//menna
+      
+    {
+        if (lhs.isNegative != rhs.isNegative)
+            return rhs.isNegative;
+
+        int cmp = lhs.compareMagnitude(rhs);
+
+        if (!lhs.isNegative)
+            return cmp > 0;
+        else
+            return cmp < 0;
+    }
 
 // Greater-than-or-equal comparison operator (x >= y)
 bool operator>=(const BigInt &lhs, const BigInt &rhs)
