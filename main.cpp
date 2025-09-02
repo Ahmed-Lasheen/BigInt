@@ -1,34 +1,29 @@
 #include <iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 class BigInt
 {
+    private:
     string number;   // Stores the number as a string
     bool isNegative; // True if number is negative
 
     // Remove unnecessary leading zeros from the number string
-lasheen
     void removeLeadingZeros() { 
         // TODO: Implement this function
-        while(number.length()>=1&&number[0]=='0')
+        while(number.length()>1&&number[0]=='0')
         {
             number.erase(0,1);
         }
-
-
-    void removeLeadingZeros(string &s)
-    {
-        while (number.length() > 1 && number[0] == '0')
+        if (number == "0")
         {
-            number.erase(0, 1);
+            isNegative = false; 
         }
-
-    }
+    }    
 
     // Compare absolute values of two BigInts (ignore signs)
     // Returns: 1 if |this| > |other|, 0 if equal, -1 if |this| < |other|
-
     int compareMagnitude(const BigInt& other) const {
         // TODO: Implement this function
         if(this->number.length()>other.number.length())
@@ -51,30 +46,22 @@ lasheen
                 i++;
             }
         }
-
-    int compareMagnitude(const BigInt &other) const
-    {
-        if (number.length() > other.number.length()) return 1;
-        if (number.length() < other.number.length()) return -1;
-        if (number > other.number) return 1;
-        if (number < other.number) return -1;
-
-
         return 0;
     }
-    string digits; // string used to convert int64_t value to string
+    //string digits; // string used to convert int64_t value to string
 
 public:
     // Default constructor - initialize to zero
     BigInt()
     { // Hafez
       // TODO: Implement this constructor
+      number="0";
     }
 
     // Constructor from 64-bit integer
     BigInt(int64_t value)
     { // Fares
-        digits = to_string(value);
+        this->number = to_string(value);
     }
 
     // Constructor from string representation
@@ -101,7 +88,7 @@ public:
         isNegative = false;
 
     number = str.substr(start);
-    removeLeadingZeros(number);
+    removeLeadingZeros();
     if (number == "0")
         isNegative = false;
 }
@@ -155,6 +142,7 @@ public:
     BigInt &operator+=(const BigInt &other)
     { // hafez
         // TODO: Implement this operator
+        *this=*this+other;
         return *this;
     }
 
@@ -187,7 +175,7 @@ public:
             number[i] = resultsubtract + '0';
         }
 
-        removeLeadingZeros(number); // remove the leading zeros from final number
+        removeLeadingZeros(); // remove the leading zeros from final number
         return *this;               // refers to the current number we have
     }
 
@@ -299,7 +287,7 @@ public:
     BigInt &operator%=(const BigInt &other)
     { // lasheen
         // TODO: Implement this operator
-        *this=*this%other;
+        *this=(*this)%other;
         return *this;
     }
 
@@ -336,28 +324,18 @@ public:
     // Pre-decrement operator (--x)
     BigInt &operator--()
     { // menna
-
-
-    if (number == "0")
-    {
+    if (number == "0") {
         number = "1";
         isNegative = true;
-        return *this;
-    }
-
-    if (!isNegative)
-    {
+    } else if (!isNegative) {
         BigInt one("1");
         *this = *this - one;
-    }
-    else
-    {
+    } else {
         BigInt one("1");
         *this = *this + one;
     }
-
-
-        return *this;
+    removeLeadingZeros();
+    return *this;
     }
 
     // Post-decrement operator (x--)
@@ -373,6 +351,9 @@ public:
     // Convert BigInt to string representation
     string toString() const
     { // hafez
+        if (isNegative && number != "0")
+        return "-" + number;
+        return number;
         // TODO: Implement this function
         return "";
     }
@@ -408,10 +389,17 @@ public:
     }
 
     // Friend declarations for comparison operators
+    friend BigInt operator%(BigInt lhs, const BigInt &rhs);
     friend bool operator==(const BigInt &lhs, const BigInt &rhs); // menna
     friend bool operator<(const BigInt &lhs, const BigInt &rhs);  // lasheen
     friend BigInt operator+(BigInt lhs, const BigInt &rhs);       // fares
     friend bool operator<=(const BigInt &lhs, const BigInt &rhs); // fares
+    friend BigInt operator-(BigInt lhs, const BigInt &rhs);
+    friend BigInt operator/(BigInt lhs, const BigInt &rhs);
+    friend bool operator>(const BigInt &lhs, const BigInt &rhs);
+    friend BigInt operator*(BigInt lhs, const BigInt &rhs); 
+    friend bool operator>=(const BigInt &lhs, const BigInt &rhs);
+
 };
 void removeLeadingZeros(string &s)
 {
@@ -464,7 +452,6 @@ BigInt operator-(BigInt lhs, const BigInt &rhs)
     // compare magnitudes of same sign
     int comp = lhs.compareMagnitude(rhs);
     if (comp == 0) {
-
         return BigInt(0);
     }
 
@@ -483,42 +470,118 @@ BigInt operator-(BigInt lhs, const BigInt &rhs)
         resultNegative = !lhs.isNegative;
     }
 
-    // pad small number with zeros
-    if (num1.length() < num2.length()) {
-        num1 = string(num2.length() - num1.length(), '0') + num1;
-    }
-    else if (num2.length() < num1.length()) {
-        num2 = string(num1.length() - num2.length(), '0') + num2;
-    }
+    // pad with zeros to make equal length
+    int maxLength = max(num1.length(), num2.length());
+    num1 = string(maxLength - num1.length(), '0') + num1;
+    num2 = string(maxLength - num2.length(), '0') + num2;
 
     string difference;
     int borrow = 0;
-    for (int i = num1.length() - 1; i >= 0; i--) { // subtraction
-        int digit1 = num1[i] - '0' - borrow;
+    for (int i = maxLength - 1; i >= 0; i--) {
+        int digit1 = (num1[i] - '0') - borrow;
         int digit2 = num2[i] - '0';
 
         if (digit1 < digit2) {
             digit1 += 10;
             borrow = 1;
         }
-        else
+        else {
             borrow = 0;
+        }
 
         int diff = digit1 - digit2;
         difference = to_string(diff) + difference;
     }
 
-    removeLeadingZeros(difference);
+    // Remove leading zeros
+    while (difference.length() > 1 && difference[0] == '0') {
+        difference.erase(0, 1);
+    }
+
     result.number = difference;
-    result.isNegative = resultNegative;
+    result.isNegative = (difference != "0") && resultNegative;
     return result;
 }
 
 // Binary multiplication operator (x * y)
-BigInt operator*(BigInt lhs, const BigInt &rhs)
-{ // menna
-    BigInt result;
+// helper: add leading zeros for shifting
+static string shiftLeft(const string &s, int zeros) {
+    return s + string(zeros, '0');
+}
 
+// helper: normalize string (remove leading zeros)
+static string stripLeadingZeros(const string &s) {
+    size_t pos = s.find_first_not_of('0');
+    if (pos == string::npos) return "0";
+    return s.substr(pos);
+}
+
+// schoolbook multiplication for small inputs
+static string multiplySimple(const string &a, const string &b) {
+    int n = a.size(), m = b.size();
+    vector<int> result(n + m, 0);
+
+    for (int i = n - 1; i >= 0; i--) {
+        for (int j = m - 1; j >= 0; j--) {
+            int prod = (a[i] - '0') * (b[j] - '0');
+            int sum = prod + result[i + j + 1];
+            result[i + j + 1] = sum % 10;
+            result[i + j] += sum / 10;
+        }
+    }
+
+    string s;
+    for (int x : result) s.push_back(x + '0');
+    return stripLeadingZeros(s);
+}
+
+// karatsuba recursive multiplication
+static string karatsuba(const string &x, const string &y) {
+    int n = max(x.size(), y.size());
+
+    // small numbers → use schoolbook
+    if (n <= 32) return multiplySimple(x, y);
+
+    // pad to equal length
+    int half = n / 2;
+    string x1 = x.substr(0, x.size() - half);
+    string x0 = x.substr(x.size() - half);
+    string y1 = y.substr(0, y.size() - half);
+    string y0 = y.substr(y.size() - half);
+
+    if (x1.empty()) x1 = "0";
+    if (y1.empty()) y1 = "0";
+
+    string z0 = karatsuba(x0, y0);
+    string z2 = karatsuba(x1, y1);
+
+    // (x1+x0)(y1+y0) - z0 - z2
+    BigInt bx1(x1), bx0(x0), by1(y1), by0(y0);
+    BigInt sumx = bx1 + bx0;
+    BigInt sumy = by1 + by0;
+    string z1 = karatsuba(sumx.toString(), sumy.toString());
+
+    BigInt bz1(z1), bz0(z0), bz2(z2);
+    BigInt mid = bz1 - bz0 - bz2;
+
+    string part1 = shiftLeft(bz2.toString(), 2 * half);
+    string part2 = shiftLeft(mid.toString(), half);
+    BigInt result(part1);
+    result += BigInt(part2);
+    result += BigInt(z0);
+
+    return result.toString();
+}
+
+// final operator*
+BigInt operator*(BigInt lhs, const BigInt &rhs) {
+    BigInt result;
+    result.isNegative = lhs.isNegative ^ rhs.isNegative;
+
+    result.number = karatsuba(lhs.number, rhs.number);
+    result.removeLeadingZeros();
+    if (result.number == "0") result.isNegative = false; // avoid "-0"
+    return result;
 }
 
 
@@ -526,55 +589,59 @@ BigInt operator*(BigInt lhs, const BigInt &rhs)
 // Binary division operator (x / y)
 BigInt operator/(BigInt lhs, const BigInt &rhs)
 { // lasheen
-    BigInt result;
-    // TODO: Implement this operator
-    if(rhs.number=="0")
-    {
-        cout<<"can't divide by zero"<<endl;
+    if (rhs.number == "0") {
+        throw runtime_error("Division by zero");
+    }
+
+    bool negativeResult = lhs.isNegative != rhs.isNegative;
+    
+    // Use absolute values
+    BigInt numerator = lhs;
+    numerator.isNegative = false;
+    BigInt denominator = rhs;
+    denominator.isNegative = false;
+
+    if (numerator < denominator) {
         return BigInt(0);
     }
-    bool negativeResult=rhs.isNegative ^ lhs.isNegative ;
-    BigInt numerator=lhs.number;
-    BigInt denominator=rhs.number;
 
-    if(a<b) return BigInt(0);
-    if(a==b)
-    {
-        if(negativeResult)
-            return BigInt("-1");
-        else
-            return BigInt("1");
-    }
-
-    BigInt longDivision("0");
-
-    for (char step : numerator.number) {
-        // Bring down next digit
-        longDivision = longDivision * 10 + BigInt(string(1, step));
-
-        // Find how many times divisor fits
+    string resultStr;
+    BigInt current("0");
+    
+    for (size_t i = 0; i < numerator.number.length(); i++) {
+        current = current * BigInt(10) + BigInt(string(1, numerator.number[i]));
+        current.removeLeadingZeros();
+        
         int count = 0;
-        while (longDivision >= denominator) {
-            longDivision = longDivision - denominator;
+        while (current >= denominator) {
+            current = current - denominator;
             count++;
         }
-
-        // Append count to result
-        result.number.push_back('0' + count);
+        
+        resultStr += to_string(count);
     }
 
     // Remove leading zeros
-    result.trimLeadingZeros();
-    result.isNegative = resultNegative && result.number != "0";
+    while (resultStr.length() > 1 && resultStr[0] == '0') {
+        resultStr.erase(0, 1);
+    }
 
+    BigInt result(resultStr);
+    result.isNegative = (resultStr != "0") && negativeResult;
     return result;
 }
 
 // Binary modulus operator (x % y)
 BigInt operator%(BigInt lhs, const BigInt &rhs)
 { // hafez
-    BigInt result;
-    // TODO: Implement this operator
+    if (rhs.number == "0") {
+        throw runtime_error("Modulus by zero");
+    }
+
+    BigInt quotient = lhs / rhs;
+    BigInt product = rhs * quotient;
+    BigInt result = lhs - product;
+    
     return result;
 }
 
@@ -582,7 +649,7 @@ BigInt operator%(BigInt lhs, const BigInt &rhs)
 bool operator==(const BigInt &lhs, const BigInt &rhs)
 { // lasheen
     // TODO: Implement this operator
-    if(lhs.isNegative==rhs.isNegative)&&(lhs.number==rhs.number)
+    if((lhs.isNegative==rhs.isNegative)&&(lhs.number==rhs.number))
         return true;
     return false;
 }
@@ -649,7 +716,7 @@ bool operator<=(const BigInt &lhs, const BigInt &rhs)
 
 // Greater-than comparison operator (x > y)
 
-    friend bool operator>(const BigInt &lhs, const BigInt &rhs)
+bool operator>(const BigInt &lhs, const BigInt &rhs)
 //menna
 
     {
@@ -668,8 +735,7 @@ bool operator<=(const BigInt &lhs, const BigInt &rhs)
 bool operator>=(const BigInt &lhs, const BigInt &rhs)
 { // lasheen
     // TODO: Implement this operator
-    if(!(lhs<rhs)||(lhs==rhs))
-    return false;
+    return !(lhs < rhs);
 }
 
 int main()
@@ -681,7 +747,7 @@ int main()
     cout << "The tests below will work once you implement them correctly." << endl
          << endl;
 
-    /*
+    
     // Test 1: Constructors and basic output
     cout << "1. Constructors and output:" << endl;
     BigInt a(12345);              // Should create BigInt from integer
@@ -737,7 +803,7 @@ int main()
     cout << "Negative multiplication: " << BigInt(-5) * BigInt(3) << endl;  // Should be "-15"
     cout << "Negative division: " << BigInt(-10) / BigInt(3) << endl;       // Should be "-3"
     cout << "Negative modulus: " << BigInt(-10) % BigInt(3) << endl;        // Should be "-1"
-    */
+    
 
     return 0;
 }
