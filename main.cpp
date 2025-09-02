@@ -8,22 +8,57 @@ class BigInt
     bool isNegative; // True if number is negative
 
     // Remove unnecessary leading zeros from the number string
+lasheen
+    void removeLeadingZeros() { 
+        // TODO: Implement this function
+        while(number.length()>=1&&number[0]=='0')
+        {
+            number.erase(0,1);
+        }
+
+
     void removeLeadingZeros(string &s)
     {
         while (number.length() > 1 && number[0] == '0')
         {
             number.erase(0, 1);
         }
+
     }
 
     // Compare absolute values of two BigInts (ignore signs)
     // Returns: 1 if |this| > |other|, 0 if equal, -1 if |this| < |other|
+
+    int compareMagnitude(const BigInt& other) const {
+        // TODO: Implement this function
+        if(this->number.length()>other.number.length())
+            return 1;
+        else if(this->number.length()<other.number.length())
+            return -1;
+        else
+        {
+            int i=0;
+            while(i<this->number.length())
+            {
+                if(this->number[i]>other.number[i])
+                {
+                    return 1;
+                }
+                else if(this->number[i]<other.number[i])
+                {
+                    return -1;
+                }
+                i++;
+            }
+        }
+
     int compareMagnitude(const BigInt &other) const
     {
         if (number.length() > other.number.length()) return 1;
         if (number.length() < other.number.length()) return -1;
         if (number > other.number) return 1;
         if (number < other.number) return -1;
+
 
         return 0;
     }
@@ -112,7 +147,7 @@ public:
     BigInt operator+() const
     { // ahmed
         BigInt result;
-        // TODO: Implement this operator
+        result=*this;
         return result;
     }
 
@@ -264,6 +299,7 @@ public:
     BigInt &operator%=(const BigInt &other)
     { // lasheen
         // TODO: Implement this operator
+        *this=*this%other;
         return *this;
     }
 
@@ -329,6 +365,8 @@ public:
     { // lasheen
         BigInt temp;
         // TODO: Implement this operator
+        temp=*this;
+        --(*this);
         return temp;
     }
 
@@ -490,6 +528,45 @@ BigInt operator/(BigInt lhs, const BigInt &rhs)
 { // lasheen
     BigInt result;
     // TODO: Implement this operator
+    if(rhs.number=="0")
+    {
+        cout<<"can't divide by zero"<<endl;
+        return BigInt(0);
+    }
+    bool negativeResult=rhs.isNegative ^ lhs.isNegative ;
+    BigInt numerator=lhs.number;
+    BigInt denominator=rhs.number;
+
+    if(a<b) return BigInt(0);
+    if(a==b)
+    {
+        if(negativeResult)
+            return BigInt("-1");
+        else
+            return BigInt("1");
+    }
+
+    BigInt longDivision("0");
+
+    for (char step : numerator.number) {
+        // Bring down next digit
+        longDivision = longDivision * 10 + BigInt(string(1, step));
+
+        // Find how many times divisor fits
+        int count = 0;
+        while (longDivision >= denominator) {
+            longDivision = longDivision - denominator;
+            count++;
+        }
+
+        // Append count to result
+        result.number.push_back('0' + count);
+    }
+
+    // Remove leading zeros
+    result.trimLeadingZeros();
+    result.isNegative = resultNegative && result.number != "0";
+
     return result;
 }
 
@@ -505,6 +582,8 @@ BigInt operator%(BigInt lhs, const BigInt &rhs)
 bool operator==(const BigInt &lhs, const BigInt &rhs)
 { // lasheen
     // TODO: Implement this operator
+    if(lhs.isNegative==rhs.isNegative)&&(lhs.number==rhs.number)
+        return true;
     return false;
 }
 
@@ -589,6 +668,7 @@ bool operator<=(const BigInt &lhs, const BigInt &rhs)
 bool operator>=(const BigInt &lhs, const BigInt &rhs)
 { // lasheen
     // TODO: Implement this operator
+    if(!(lhs<rhs)||(lhs==rhs))
     return false;
 }
 
