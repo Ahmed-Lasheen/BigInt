@@ -61,7 +61,13 @@ public:
     // Constructor from 64-bit integer
     BigInt(int64_t value)
     { // Fares
-        this->number = to_string(value);
+        if (value < 0) {
+            isNegative = true;
+            number = to_string(-value);
+        } else {
+            isNegative = false;
+            number = to_string(value);
+        }
     }
 
     // Constructor from string representation
@@ -410,8 +416,25 @@ void removeLeadingZeros(string &s)
 }
 
 // Binary addition operator (x + y)
+// Binary addition operator (x + y)
 BigInt operator+(BigInt lhs, const BigInt &rhs)
 { // fares
+    // Handle different signs - convert to subtraction
+    if (lhs.isNegative != rhs.isNegative) {
+        if (lhs.isNegative) {
+            // lhs is negative, rhs is positive: rhs - |lhs|
+            BigInt absLhs = lhs;
+            absLhs.isNegative = false;
+            return rhs - absLhs;
+        } else {
+            // lhs is positive, rhs is negative: lhs - |rhs|
+            BigInt absRhs = rhs;
+            absRhs.isNegative = false;
+            return lhs - absRhs;
+        }
+    }
+    
+    // Both have same sign
     BigInt result;
     string x = lhs.number;
     string y = rhs.number;
@@ -435,7 +458,9 @@ BigInt operator+(BigInt lhs, const BigInt &rhs)
     // Remove leading zero if not needed
     if (sum[0] == '0')
         sum.erase(0, 1);
+    
     result.number = sum;
+    result.isNegative = lhs.isNegative; // Both have same sign, so use either one
     return result;
 }
 
